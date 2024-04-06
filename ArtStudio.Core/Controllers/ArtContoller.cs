@@ -43,4 +43,13 @@ public class ArtsController(IArtService artService) : ControllerBase
             (art.Id, art.CreatedOn, art.Name, art.Price, art.Description);
         return Ok(response);
     }
+    [HttpPatch("{artId}")]
+    public async Task<ActionResult<ArtResponse>> UpdateArt(
+        [FromRoute] Guid artId, [FromBody] ArtUpdateRequest artUpdateRequest)
+    {
+        var art = await artService.Update(artId, artUpdateRequest);
+        var response = new ArtResponse
+            (art.Id, art.CreatedOn, art.Name, art.Price, art.Description);
+        return Ok(response);
+    }
 }

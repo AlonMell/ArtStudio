@@ -1,3 +1,4 @@
+using System.Security;
 using ArtStudio.Core.Context;
 using ArtStudio.Core.Dto;
 using ArtStudio.Core.Errors;
@@ -12,7 +13,7 @@ public class ArtService(ArtStudioDbContext dbContext) : IArtService
     {
         return await dbContext.Arts
             .AsNoTracking()
-            .OrderBy(art => art.CreatedOn)
+            .OrderBy(a => a.CreatedOn)
             .ToListAsync() 
                ?? throw ServiceException.NotFound("Arts not found.");
     }
@@ -21,7 +22,7 @@ public class ArtService(ArtStudioDbContext dbContext) : IArtService
     {
         return await dbContext.Arts
             .AsNoTracking()
-            .FirstOrDefaultAsync(art => art.Id == id)
+            .FirstOrDefaultAsync(a => a.Id == id)
             ?? throw ServiceException.NotFound("Art not found.");
     }
     
@@ -39,32 +40,35 @@ public class ArtService(ArtStudioDbContext dbContext) : IArtService
         return await dbContext.Arts.FirstOrDefaultAsync(a => a.Id == artEntity.Id);
     }
 
-    public async Task<ArtEntity?> Update(ArtRequest art)
+    public async Task<ArtEntity?> Update(Guid id, ArtUpdateRequest art)
     {
+        var artToUpdate = await dbContext.Arts.FirstOrDefaultAsync(a => a.Id == id);
+        if (artToUpdate is null) throw ServiceException.NotFound("Art not found.");
         var artEntity = new ArtEntity
         {
-            Id = art.Id ?? throw ServiceException.BadRequest("Id not specified."),
-            Name = art.Name ?? throw ServiceException.BadRequest("Name not specified."),
-            Price = art.Price ?? 0.00m,
-            Description = art.Description ?? string.Empty
+            Name = art.Name ?? artToUpdate.Name,
+            Price = art.Price ?? artToUpdate.Price,
+            Description = art.Description ?? artToUpdate.Description
         };
         await dbContext.Arts
-            .Where(a => a.Id == art.Id)
+            .Where(a => a.Id == id)
             .ExecuteUpdateAsync(s => s
-                .SetProperty(a => a.Id, artEntity.Id)
                 .SetProperty(a => a.Name, artEntity.Name)
-                .SetProperty(a => art.Price, artEntity.Price)
-                .SetProperty(a => art.Description, artEntity.Description));
-        return await dbContext.Arts.FirstOrDefaultAsync(a => a.Id == art.Id);
+                .SetProperty(a => a.Price, artEntity.Price)
+                .SetProperty(a => a.Description, artEntity.Description));
+
+        return await dbContext.Arts
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == id);
     }
 
     public async Task<ArtEntity?> Delete(Guid id)
     {
-        var result = dbContext.Arts.FirstOrDefaultAsync(a => a.Id == id);
+        var result = await dbContext.Arts.FirstOrDefaultAsync(a => a.Id == id);
         if (result is null) throw ServiceException.BadRequest("Art with this id was not found.");
         await dbContext.Arts
-            .Where(art => art.Id == id)
+            .Where(a => a.Id == id)
             .ExecuteDeleteAsync();
-        return await result;
+        return result;
     }
 }

@@ -8,6 +8,6 @@ public interface IArtService
     Task<List<ArtEntity>> GetAll();
     Task<ArtEntity?> Get(Guid id);
     Task<ArtEntity?> Add(ArtRequest art);
-    Task<ArtEntity?> Update(ArtRequest art);
+    Task<ArtEntity?> Update(Guid id, ArtUpdateRequest art);
     Task<ArtEntity?> Delete(Guid id);
 }

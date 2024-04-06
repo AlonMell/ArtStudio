@@ -13,7 +13,7 @@ public static class ApplicationExtension
         app.UseSwaggerUI();
         app.MapControllerRoute(
             name: "default",
-            pattern: "{controller=Art}/{action=GetArts}/{id?}");
+            pattern: "{controller=Arts}/{action=GetArts}/{id?}");
         
         return app;
     }
